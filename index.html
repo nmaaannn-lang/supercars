@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX — Supercar Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-dim: #7a5f22;
+    --bg: #080808;
+    --surface: #111111;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0ece4;
+    --muted: #666;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  .cursor {
+    position: fixed;
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 32px; height: 32px;
+    border: 1px solid rgba(201,168,76,0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.15s ease;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+  }
+
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  .hero-blackout {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    z-index: 1;
+    animation: blackoutLift 3.5s ease-in-out forwards;
+    animation-delay: 0.5s;
+  }
+
+  @keyframes blackoutLift {
+    0%   { opacity: 1; }
+    60%  { opacity: 0.92; }
+    100% { opacity: 0; pointer-events: none; }
+  }
+
+  .hero-flash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 35% 60%, rgba(255,240,180,0.35) 0%, transparent 55%),
+                radial-gradient(ellipse at 65% 60%, rgba(255,240,180,0.35) 0%, transparent 55%);
+    z-index: 2;
+    opacity: 0;
+    animation: headlightOn 0.8s ease-out forwards;
+    animation-delay: 1.8s;
+  }
+
+  @keyframes headlightOn {
+    0%   { opacity: 0; }
+    20%  { opacity: 1; }
+    60%  { opacity: 0.6; }
+    100% { opacity: 0; }
+  }
+
+  .hero-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.2) 0%, transparent 40%, rgba(8,8,8,0.7) 80%, rgba(8,8,8,1) 100%);
+    z-index: 3;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 4;
+    padding: 0 6vw 6vh;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: heroContentIn 1s ease forwards;
+    animation-delay: 3s;
+  }
+
+  @keyframes heroContentIn { to { opacity: 1; transform: translateY(0); } }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 12vw, 140px);
+    line-height: 0.9;
+    color: #fff;
+    letter-spacing: 2px;
+  }
+
+  .hero-title span { color: var(--gold); }
+
+  .hero-sub {
+    font-size: 13px;
+    color: rgba(240,236,228,0.5);
+    letter-spacing: 2px;
+    margin-top: 16px;
+    text-transform: uppercase;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 40px; right: 6vw;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: heroContentIn 1s ease forwards;
+    animation-delay: 3.5s;
+  }
+
+  .hero-scroll span {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+  }
+
+  .scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+    animation-delay: 4s;
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 6vw;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.8), transparent);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: #fff;
+  }
+
+  .nav-logo span { color: var(--gold); }
+
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+
+  .nav-links a {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(240,236,228,0.5);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--gold); }
+
+  /* GALLERY */
+  .gallery-section { padding: 80px 6vw; }
+
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 48px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .section-title span { color: var(--gold); }
+
+  .car-count {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding-bottom: 4px;
+  }
+
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 40px; }
+
+  .filter-btn {
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+  .filter-btn.active { background: var(--gold); border-color: var(--gold); color: #000; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2px;
+  }
+
+  .card {
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+    aspect-ratio: 4/3;
+    background: var(--surface);
+  }
+
+  .card img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.4s;
+    filter: brightness(0.75) saturate(0.8);
+  }
+
+  .card:hover img { transform: scale(1.08); filter: brightness(0.9) saturate(1.1); }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 50%);
+    z-index: 1;
+  }
+
+  .card-info {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 20px;
+    z-index: 2;
+    transform: translateY(8px);
+    transition: transform 0.3s;
+  }
+
+  .card:hover .card-info { transform: translateY(0); }
+
+  .card-brand {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .card-name { font-size: 18px; font-weight: 500; color: #fff; }
+
+  .card-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: all 0.3s 0.05s;
+  }
+
+  .card:hover .card-meta { opacity: 1; transform: translateY(0); }
+
+  .card-meta span { font-size: 11px; color: rgba(240,236,228,0.5); letter-spacing: 1px; }
+  .card-meta span strong { color: var(--text); font-weight: 400; }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 2px;
+    background: var(--gold);
+    z-index: 3;
+    transition: width 0.4s ease;
+  }
+
+  .card:hover::before { width: 60px; }
+
+  /* MODAL */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    backdrop-filter: blur(6px);
+  }
+
+  .modal-bg.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    max-width: 580px;
+    width: 100%;
+    position: relative;
+    animation: modalIn 0.3s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal img { width: 100%; height: 260px; object-fit: cover; display: block; filter: brightness(0.85); }
+  .modal-body { padding: 28px 32px 32px; }
+
+  .modal-eyebrow {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 2px;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .spec-item { padding: 14px 16px; background: var(--surface); }
+  .spec-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .spec-val { font-size: 16px; font-weight: 500; color: #fff; }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: none;
+    font-size: 18px;
+    transition: all 0.2s;
+    z-index: 10;
+  }
+
+  .modal-close:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 6vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  footer .logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 4px; color: var(--muted); }
+  footer .logo span { color: var(--gold-dim); }
+  footer p { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <div class="nav-logo">AP<span>E</span>X</div>
+  <ul class="nav-links">
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#">Compare</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-blackout"></div>
+  <div class="hero-flash"></div>
+  <video class="hero-video" src="hero.mp4" autoplay muted loop playsinline></video>
+  <div class="hero-gradient"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">The World's Finest Machines</p>
+    <h1 class="hero-title">PURE<br><span>POWER</span></h1>
+    <p class="hero-sub">24 Icons &nbsp;·&nbsp; 9 Brands &nbsp;·&nbsp; Unlimited Obsession</p>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<section class="gallery-section" id="gallery">
+  <div class="section-header">
+    <h2 class="section-title">The <span>Collection</span></h2>
+    <p class="car-count" id="countLabel">24 cars</p>
+  </div>
+  <div class="filters" id="filters">
+    <button class="filter-btn active" onclick="filterCars('all',this)">All</button>
+    <button class="filter-btn" onclick="filterCars('Ferrari',this)">Ferrari</button>
+    <button class="filter-btn" onclick="filterCars('Lamborghini',this)">Lamborghini</button>
+    <button class="filter-btn" onclick="filterCars('Bugatti',this)">Bugatti</button>
+    <button class="filter-btn" onclick="filterCars('McLaren',this)">McLaren</button>
+    <button class="filter-btn" onclick="filterCars('Porsche',this)">Porsche</button>
+    <button class="filter-btn" onclick="filterCars('Audi',this)">Audi</button>
+    <button class="filter-btn" onclick="filterCars('BMW',this)">BMW</button>
+    <button class="filter-btn" onclick="filterCars('Aston Martin',this)">Aston Martin</button>
+    <button class="filter-btn" onclick="filterCars('Pagani',this)">Pagani</button>
+  </div>
+  <div class="grid" id="carGrid"></div>
+</section>
+
+<div class="modal-bg" id="modal" onclick="bgClose(event)">
+  <div class="modal" id="modalBox">
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    <img id="mImg" src="" alt="">
+    <div class="modal-body">
+      <div class="modal-eyebrow" id="mBrand"></div>
+      <div class="modal-title" id="mName"></div>
+      <div class="spec-grid" id="mSpecs"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="logo">AP<span>E</span>X</div>
+  <p>Supercar Gallery &nbsp;·&nbsp; Built with passion</p>
+</footer>
+
+<script>
+const cars = [
+  { name:"SF90 Stradale",      brand:"Ferrari",      img:"images/ferrari-sf90.jpg",    price:"$625K",  hp:"986 hp",   speed:"211 mph", engine:"V8 Hybrid",       weight:"1,570 kg", year:2020 },
+  { name:"488 Pista",          brand:"Ferrari",      img:"images/ferrari-488.jpg",     price:"$350K",  hp:"710 hp",   speed:"211 mph", engine:"V8 Twin-Turbo",   weight:"1,385 kg", year:2018 },
+  { name:"Roma",               brand:"Ferrari",      img:"images/ferrari-roma.jpg",    price:"$222K",  hp:"611 hp",   speed:"199 mph", engine:"V8 Twin-Turbo",   weight:"1,472 kg", year:2020 },
+  { name:"Huracán EVO",        brand:"Lamborghini",  img:"images/lambo-huracan.jpg",   price:"$261K",  hp:"631 hp",   speed:"202 mph", engine:"V10 NA",          weight:"1,422 kg", year:2019 },
+  { name:"Aventador SVJ",      brand:"Lamborghini",  img:"images/lambo-aventador.jpg", price:"$573K",  hp:"759 hp",   speed:"217 mph", engine:"V12 NA",          weight:"1,525 kg", year:2018 },
+  { name:"Urus Performante",   brand:"Lamborghini",  img:"images/lambo-urus.jpg",      price:"$260K",  hp:"657 hp",   speed:"190 mph", engine:"V8 Twin-Turbo",   weight:"2,150 kg", year:2022 },
+  { name:"Chiron Super Sport", brand:"Bugatti",      img:"images/bugatti-chiron.jpg",  price:"$3.9M",  hp:"1,578 hp", speed:"273 mph", engine:"W16 Quad-Turbo",  weight:"1,995 kg", year:2021 },
+  { name:"Veyron 16.4",        brand:"Bugatti",      img:"images/bugatti-veyron.jpg",  price:"$1.9M",  hp:"1,001 hp", speed:"253 mph", engine:"W16 Quad-Turbo",  weight:"1,888 kg", year:2005 },
+  { name:"720S",               brand:"McLaren",      img:"images/mclaren-720s.jpg",    price:"$299K",  hp:"710 hp",   speed:"212 mph", engine:"V8 Twin-Turbo",   weight:"1,283 kg", year:2017 },
+  { name:"Senna",              brand:"McLaren",      img:"images/mclaren-senna.jpg",   price:"$958K",  hp:"789 hp",   speed:"208 mph", engine:"V8 Twin-Turbo",   weight:"1,198 kg", year:2018 },
+  { name:"Artura",             brand:"McLaren",      img:"images/mclaren-artura.jpg",  price:"$237K",  hp:"671 hp",   speed:"205 mph", engine:"V6 Hybrid",       weight:"1,395 kg", year:2021 },
+  { name:"911 GT3 RS",         brand:"Porsche",      img:"images/porsche-gt3rs.jpg",   price:"$225K",  hp:"518 hp",   speed:"184 mph", engine:"Flat-6 NA",       weight:"1,450 kg", year:2022 },
+  { name:"918 Spyder",         brand:"Porsche",      img:"images/porsche-918.jpg",     price:"$845K",  hp:"887 hp",   speed:"214 mph", engine:"V8 Hybrid",       weight:"1,674 kg", year:2013 },
+  { name:"Cayman GT4 RS",      brand:"Porsche",      img:"images/porsche-cayman.jpg",  price:"$142K",  hp:"493 hp",   speed:"196 mph", engine:"Flat-6 NA",       weight:"1,415 kg", year:2021 },
+  { name:"R8 V10 Performance", brand:"Audi",         img:"images/audi-r8v10.jpg",      price:"$198K",  hp:"602 hp",   speed:"205 mph", engine:"V10 NA",          weight:"1,695 kg", year:2019 },
+  { name:"R8 GT",              brand:"Audi",         img:"images/audi-r8gt.jpg",       price:"$239K",  hp:"611 hp",   speed:"205 mph", engine:"V10 NA",          weight:"1,580 kg", year:2023 },
+  { name:"TT RS",              brand:"Audi",         img:"images/audi-ttrs.jpg",       price:"$72K",   hp:"394 hp",   speed:"174 mph", engine:"5-cyl Turbo",     weight:"1,450 kg", year:2017 },
+  { name:"M8 Competition",     brand:"BMW",          img:"images/bmw-m8.jpg",          price:"$133K",  hp:"617 hp",   speed:"190 mph", engine:"V8 Twin-Turbo",   weight:"1,900 kg", year:2020 },
+  { name:"i8",                 brand:"BMW",          img:"images/bmw-i8.jpg",          price:"$148K",  hp:"369 hp",   speed:"155 mph", engine:"3-cyl Hybrid",    weight:"1,539 kg", year:2014 },
+  { name:"M4 CSL",             brand:"BMW",          img:"images/bmw-m4csl.jpg",       price:"$140K",  hp:"543 hp",   speed:"191 mph", engine:"I6 Twin-Turbo",   weight:"1,625 kg", year:2022 },
+  { name:"DB11",               brand:"Aston Martin", img:"images/aston-db11.jpg",      price:"$205K",  hp:"630 hp",   speed:"200 mph", engine:"V12 Twin-Turbo",  weight:"1,760 kg", year:2016 },
+  { name:"Vantage F1 Edition", brand:"Aston Martin", img:"images/aston-vantage.jpg",   price:"$185K",  hp:"528 hp",   speed:"195 mph", engine:"V8 Twin-Turbo",   weight:"1,570 kg", year:2021 },
+  { name:"Huayra BC",          brand:"Pagani",       img:"images/pagani-huayra.jpg",   price:"$2.6M",  hp:"791 hp",   speed:"224 mph", engine:"V12 Twin-Turbo",  weight:"1,218 kg", year:2016 },
+  { name:"Zonda R",            brand:"Pagani",       img:"images/pagani-zonda.jpg",    price:"$2.2M",  hp:"740 hp",   speed:"233 mph", engine:"V12 NA",          weight:"1,070 kg", year:2009 },
+];
+
+function renderCards(filter) {
+  const grid = document.getElementById("carGrid");
+  const list = filter === "all" ? cars : cars.filter(c => c.brand === filter);
+  document.getElementById("countLabel").textContent = list.length + " cars";
+  grid.innerHTML = list.map((car, i) => `
+    <div class="card" style="animation: fadeUp 0.5s ease ${i*0.04}s both;" onclick="openModal(${cars.indexOf(car)})">
+      <img src="${car.img}" alt="${car.name}" loading="lazy">
+      <div class="card-overlay"></div>
+      <div class="card-info">
+        <div class="card-brand">${car.brand}</div>
+        <div class="card-name">${car.name}</div>
+        <div class="card-meta">
+          <span><strong>${car.hp}</strong></span>
+          <span><strong>${car.speed}</strong></span>
+          <span><strong>${car.price}</strong></span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function filterCars(brand, btn) {
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderCards(brand);
+}
+
+function openModal(idx) {
+  const car = cars[idx];
+  document.getElementById("mImg").src = car.img;
+  document.getElementById("mImg").alt = car.name;
+  document.getElementById("mBrand").textContent = car.brand + " · " + car.year;
+  document.getElementById("mName").textContent = car.name;
+  document.getElementById("mSpecs").innerHTML = [
+    ["Price", car.price], ["Power", car.hp], ["Top Speed", car.speed],
+    ["Engine", car.engine], ["Weight", car.weight], ["Year", car.year]
+  ].map(([l,v]) => `<div class="spec-item"><div class="spec-label">${l}</div><div class="spec-val">${v}</div></div>`).join("");
+  document.getElementById("modal").classList.add("open");
+}
+
+function bgClose(e) {
+  if (e.target.id === "modal") document.getElementById("modal").classList.remove("open");
+}
+
+const cursor = document.getElementById("cursor");
+const ring = document.getElementById("cursorRing");
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener("mousemove", e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx+"px"; cursor.style.top = my+"px";
+});
+(function animRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx+"px"; ring.style.top = ry+"px";
+  requestAnimationFrame(animRing);
+})();
+
+renderCards("all");
+</script>
+</body>
+</html>
